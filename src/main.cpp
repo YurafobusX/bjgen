@@ -1,4 +1,5 @@
 #include <iostream>
+#include <istream>
 #include <ostream>
 #include <string>
 #include <map>
@@ -34,10 +35,20 @@ int replace(std::stringstream& in, std::ostream& output = std::cout) {
 };
 
 int main(int argc, char* argv[]) {
+    std::istream* input = &std::cin;
+    std::ostream* output = &std::cout; 
 
-    std::stringstream file = std::stringstream(std::string((std::istreambuf_iterator<char>(std::cin)), std::istreambuf_iterator<char>()));
+    std::ifstream finput("../resources/example.html", std::ios::in);
+    if (!finput.good()) 
+        return -1;
+    input = &finput;
 
-    replace(file);
+    std::ofstream foutput("../resources/result.html", std::ios::out);
+    output = &foutput;
+
+    std::stringstream file(std::string((std::istreambuf_iterator<char>(*input)), std::istreambuf_iterator<char>()));
+
+    replace(file, *output);
 
     return 0;
 };
