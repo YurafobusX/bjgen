@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
     std::istream* input = &std::cin;
     std::ostream* output = &std::cout; 
 
-    std::ifstream finput("../resources/example.html", std::ios::in);
+    std::ifstream finput("../resources/example.html", std::ios::in | std::ios::binary);
     if (!finput.good()) 
         return -1;
     input = &finput;
@@ -46,7 +46,8 @@ int main(int argc, char* argv[]) {
     std::ofstream foutput("../resources/result.html", std::ios::out);
     output = &foutput;
 
-    std::stringstream file(std::string((std::istreambuf_iterator<char>(*input)), std::istreambuf_iterator<char>()));
+    std::stringstream file;
+    file << std::noskipws << input->rdbuf();
 
     replace(file, *output);
 
