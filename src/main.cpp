@@ -28,7 +28,7 @@ int replace(std::stringstream& in, std::ostream& output = std::cout) {
                 //TODO Динамические маркеры
             }
             in >> current;
-            if (current != ']') throw std::runtime_error("");
+            if (current != ']') return -1;
         } else output << current;
     };
     return 0;
