@@ -48,7 +48,7 @@ int replace(std::istream& in, std::ostream& output = std::cout) {
 int main(int argc, char* argv[]) {
     std::istream* input = &std::cin;
     std::ostream* output = &std::cout; 
-
+    
     std::ifstream finput("../resources/example.html", std::ios::in);
     if (!finput.good()) 
         return -1;
