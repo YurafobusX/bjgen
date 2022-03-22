@@ -65,7 +65,6 @@ int main(int argc, char* argv[]) {
         std::string current;
         int number = 1;
         while (wk.cell(latter + 1, number).value().type() != OpenXLSX::XLValueType::Empty) {
-            std::cerr << number << '\n';
             std::string current = wk.cell(latter + 1, number).value().get<std::string>();
             dynamicMarks[latter].push_back(std::move(current));
             ++number;
