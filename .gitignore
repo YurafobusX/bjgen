@@ -44,3 +44,6 @@ out/
 #vscode
 .vscode/
 .cache/
+
+#result
+resources/result.html 
