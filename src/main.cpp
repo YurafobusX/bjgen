@@ -28,9 +28,9 @@ int replace(std::istream& in, std::ostream& output = std::cout) {
             size_t number;
             in >> number;
             if (current == 'S') {
-                output << staticMarks[number - 1];
+                output << staticMarks[number];
             } else if (current == 'D') {
-                output << dynamicMarks[count][number - 1];
+                output << dynamicMarks[count][number];
             } else return 2;
             in >> current;
             if (current != ']') return 2;
