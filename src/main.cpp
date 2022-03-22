@@ -9,7 +9,7 @@
 #include "OpenXLSX.hpp"
 
 //Вектор, хранящий замену для всех статических маркеров
-std::vector<std::string> staticMarks = {"test"};
+std::vector<std::string> staticMarks;
 
 //Вектор, хранящий замену для всех динамических маркеров
 std::vector<std::vector<std::string>> dynamicMarks;

@@ -1,0 +1,47 @@
+.g {
+    width: 85mm;
+    height: 55mm;
+    display: inline-block;
+}
+
+.t {
+    display: grid;
+    grid-template-columns: 40mm 45mm;
+    grid-template-rows: 30mm 10mm 10mm 5mm;
+    grid-template-areas: 
+    "logo hall"
+    "name ."
+    "city .";
+
+    width: 85mm;
+    height: 55mm;
+
+    border-style: solid;
+}
+
+.logo {
+   grid-area: logo;
+   width: 40mm;
+   height: 40mm;
+}
+
+.hall {
+    grid-area: hall;
+    line-height: 40mm;
+    text-align: center;
+}
+
+.name {
+    grid-area: name;
+    width: 85mm;
+    line-height: 10mm;
+    text-align: center;
+}
+
+.city {
+    grid-area: city;
+    width: 85mm;
+    line-height: 10mm;
+    text-align: center;
+}
+
