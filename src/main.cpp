@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <iostream>
 #include <istream>
+#include <stdexcept>
 #include <string>
 #include <map>
 #include <utility>
@@ -9,6 +10,8 @@
 #include <fstream>
 #include <map>
 #include "OpenXLSX.hpp"
+
+#define LOG(__str__) if (isLogEnable) {std::clog << __str__;}
 
 //Вектор, хранящий замену для всех статических маркеров
 std::vector<std::string> staticMarks;
@@ -19,19 +22,34 @@ std::vector<std::vector<std::string>> dynamicMarks;
 //Индекс замены для динамических маркеров
 size_t count = 0;
 
+//Включение логов
+bool isLogEnable = true;
+
 //Функция считывания данных из конфига
 int config(const std::map<std::string, std::string&>& map, const std::string& configPath) {
+    LOG("Чтение конфигурационного файла\n")
     std::ifstream config(configPath, std::ios::in);
+    if (!config.good()) {
+        std::cerr << "Не удалось открыть файл \"" << configPath << "\"\n"; 
+        return 1;
+    }
     std::string key;
     while (std::getline(config, key, '=')) {
         if (key[0] == '#') {
             std::getline(config, key);
+            LOG("Пропуск строки\n")
             continue;
         }
-        //TODO Добавить обработку исключений
-        std::string& value = map.at(key);
-        std::getline(config, value);
+        try {
+            std::string& value = map.at(key);
+            std::getline(config, value);
+            LOG("Запись " + value + " в " + key + "\n")
+        } catch (std::out_of_range) {
+            std::cerr << "Введён неверный параметр конфигурации \"" << key << "\"\n";
+            return 1; 
+        };
     }
+    LOG("Конец чтения конфигурационного файла\n")
     return 0;
 };
 
@@ -39,7 +57,6 @@ int config(const std::map<std::string, std::string&>& map, const std::string& co
 //Принимает на вход строку и пишет её в выводной поток, заменяя все маркеры (\[[S,D]number\]) на их значение
 int replace(std::istream& in, std::ostream& output = std::cout) {
     char current;
-
     while(in >> current) {
         if (current =='[') {
             in >> current;
@@ -50,9 +67,9 @@ int replace(std::istream& in, std::ostream& output = std::cout) {
                 output << staticMarks[number];
             } else if (current == 'D') {
                 output << dynamicMarks[count][number];
-            } else return 2;
+            } else return 1;
             in >> current;
-            if (current != ']') return 2;
+            if (current != ']') return 1;
         } else output << current;
     };
     //in.seekg(0);
@@ -60,18 +77,25 @@ int replace(std::istream& in, std::ostream& output = std::cout) {
 };
 
 int main(int argc, char* argv[]) {
-    std::istream* input = &std::cin;
-    std::ostream* output = &std::cout; 
-
-    std::string inputPath, outputPath, docPath, isLogEnableStr;
+    std::string inputPath, outputPath, docPath, isLogEnableStr, configPath;
     std::map<std::string, std::string&> map = {
         {"input", inputPath},
         {"output", outputPath},
         {"xlsxData", docPath},
         {"log", isLogEnableStr}
     };
+    if (isLogEnableStr == "false") {isLogEnable = false;}
+    if (argc < 2) {
+        std::cout << "Введите название конфигурационного файла:\n";
+        std::cin >> configPath;
+    } else {
+        configPath = argv[1];
+    }
 
-    config(map, "../resources/config.txt");
+    config(map, configPath);
+
+    std::istream* input = &std::cin;
+    std::ostream* output = &std::cout; 
 
     std::ifstream finput(inputPath, std::ios::in);
     if (!finput.good()) 
