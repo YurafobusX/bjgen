@@ -40,7 +40,7 @@ int config(const std::map<std::string, std::string&>& map, const std::string& co
         try {
             std::string& value = map.at(key);
             std::getline(config, value);
-            LOG("Запись " + value + " в " + key + "\n")
+            LOG("Запись \"" + value + "\" в \"" + key + "\"\n")
         } catch (std::out_of_range) {
             std::cerr << "Введён неверный параметр конфигурации \"" << key << "\"\n";
             return 1; 
@@ -53,21 +53,21 @@ int config(const std::map<std::string, std::string&>& map, const std::string& co
 
 //Принимает на вход строку и пишет её в выводной поток, заменяя все маркеры (\[[S,D]number\]) на их значение
 int replace(std::istream& in, std::ostream& output = std::cout) {
-    char current;
-    while(in >> current) {
-        if (current =='[') {
-            in >> current;
-            //TODO Может закончится файл
-            size_t number;
-            in >> number;
-            if (current == 'S') {
-                
-            } else if (current == 'D') {
-                output << dynamicMarks[count][number];
-            } else return 1;
-            in >> current;
-            if (current != ']') return 1;
-        } else output << current;
+    LOG("Начало " + std::to_string(count + 1) + "прохода\n")
+    std::string current;
+    while(std::getline(in, current, '[')) {
+        LOG("Найдена \"[\"...")
+        std::getline(in, current, ']');
+        LOG("Найдена \"]\"...")
+        try {
+            int number = std::stoi(current);
+            LOG("Проверка на число \"" + current + "\"...")
+            output << dynamicMarks[count][number];
+            LOG("Запись динамической марки" + dynamicMarks[count][number] + "\n")
+        } catch (std::invalid_argument) {
+            std::cerr << "[" << current << "]" << " не подходит под формат метки";
+            return 1;
+        }
     };
     //in.seekg(0);
     return 0;
