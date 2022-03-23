@@ -57,6 +57,7 @@ int replace(std::istream& in, std::ostream& output = std::cout) {
     LOG("Начало " + std::to_string(count + 1) + " прохода\n")
     std::string current;
     while(std::getline(in, current, '[')) {
+        output << current;
         if (in.eof())
             continue;
         LOG("Найдена \"[\"...")
@@ -70,25 +71,26 @@ int replace(std::istream& in, std::ostream& output = std::cout) {
             int number = std::stoi(current);
             LOG("Проверка на число \"" + current + "\"...")
             output << dynamicMarks[count][number];
-            LOG("Запись динамической марки \"" + dynamicMarks[count][number] + "\"\n")
+            LOG("Запись динамической марки \"" + dynamicMarks[count][number] + "\"...\n")
         } catch (std::invalid_argument) {
             std::cerr << "[" << current << "]" << " не подходит под формат метки";
             return 1;
         }
     };
+    LOG("Конец " + std::to_string(count + 1) + " прохода\n")
     //in.seekg(0);
     return 0;
 };
 
 int main(int argc, char* argv[]) {
-    std::string inputPath, outputPath, docPath, isLogEnableStr, configPath;
+    std::string inputPath, outputPath, docPath, isLogEnableStr, configPath, sheet;
     std::map<std::string, std::string&> map = {
         {"input", inputPath},
         {"output", outputPath},
         {"xlsxData", docPath},
-        {"log", isLogEnableStr}
+        {"log", isLogEnableStr},
+        {"sheet", sheet}
     };
-    if (isLogEnableStr == "false") {isLogEnable = false;}
     if (argc < 2) {
         std::cout << "Введите название конфигурационного файла:\n";
         std::cin >> configPath;
@@ -97,31 +99,62 @@ int main(int argc, char* argv[]) {
     }
 
     config(map, configPath);
+    if (isLogEnableStr == "false") {isLogEnable = false;}
 
     std::istream* input = &std::cin;
     std::ostream* output = &std::cout; 
 
-    std::ifstream finput(inputPath, std::ios::in);
-    if (!finput.good()) 
-        return 1;
-    input = &finput;
+    std::ifstream finput;
+    if (inputPath.size() != 0) {
+        finput.open(inputPath, std::ios::in);
+        if (!finput.good()) {
+            std::cerr << "Не удалось открыть файл " << inputPath << '\n';
+            return 1;
+        }
+        input = &finput;
+        LOG("Окрыт файл на ввод \"" + inputPath + "\"\n")
+    } else { std::cout << "Введите текст для обработки:\n";}
     *input >> std::noskipws;
 
-    std::ofstream foutput(outputPath, std::ios::out);
-    if (!foutput.good()) 
-        return 1;
-    output = &foutput;
+    std::string file((std::istreambuf_iterator<char>(*input)), std::istreambuf_iterator<char>());
 
-    OpenXLSX::XLDocument doc(docPath);
-    if (doc.name() == "")
+    std::ofstream foutput;
+    if (outputPath != "") {
+        foutput.open(outputPath, std::ios::out);
+        if (!foutput.good()) {
+            std::cerr << "Не удалось открыть файл " << outputPath << '\n';
+            return 1;
+        }
+        output = &foutput;
+        LOG("Окрыт файл на вывод \"" + outputPath + "\"\n")
+    } else {LOG("Вывод будет направлен в cout")}
+
+    OpenXLSX::XLDocument doc;
+    try {
+        doc.open(docPath);
+    } catch (std::runtime_error) {
+        std::cerr << "Не удалось открыть файл " << docPath << '\n';
         return 1;
-    auto wk = doc.workbook().worksheet("1");
+    }
+    LOG("Данные будут браться из файла \"" + docPath + "\"\n") 
+
+    OpenXLSX::XLWorksheet wk;
+    try {
+        wk = doc.workbook().worksheet(sheet);
+    } catch (std::runtime_error) {
+        std::cerr << "В книге отсутсвует страница \"" << sheet << "\"\n";  
+        return 1;
+    }
+    LOG("Открыта страница \"" + sheet + "\"\n")
+
     size_t latter = 0;
+    LOG("Чтение из xlsx документа...\n")
     while(wk.cell(latter + 1, 1).value().type() != OpenXLSX::XLValueType::Empty) {
         dynamicMarks.push_back(std::vector<std::string>());
         std::string current;
         int number = 1;
         while (wk.cell(latter + 1, number).value().type() != OpenXLSX::XLValueType::Empty) {
+            LOG("Считывание из ячейки \"" + std::to_string(latter + 1) + "," + std::to_string(number) + "\"\n")
             std::string current = wk.cell(latter + 1, number).value().get<std::string>();
             dynamicMarks[latter].push_back(std::move(current));
             ++number;
@@ -129,15 +162,15 @@ int main(int argc, char* argv[]) {
         ++latter;
     }
     doc.close();
-
-
-    std::string file((std::istreambuf_iterator<char>(*input)), std::istreambuf_iterator<char>());
+    LOG("Чтение завершено\n")
 
     for (count = 0; count < dynamicMarks.size(); ++count) {
         auto j = std::stringstream(file);
         j << std::noskipws;
         if (replace(j, *output)) return 2;
     }
+
+    std::cout << "Программа завершилась успешно\n";
 
     return 0;
 };

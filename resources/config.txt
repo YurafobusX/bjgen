@@ -1,4 +1,5 @@
 input=../resources/example.html
-#log=false
+log=false
 output=../resources/result.html
 xlsxData=../resources/test.xlsx
+sheet=1
