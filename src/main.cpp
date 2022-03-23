@@ -13,9 +13,6 @@
 
 #define LOG(__str__) if (isLogEnable) {std::clog << __str__;}
 
-//Вектор, хранящий замену для всех статических маркеров
-std::vector<std::string> staticMarks;
-
 //Вектор, хранящий замену для всех динамических маркеров
 std::vector<std::vector<std::string>> dynamicMarks;
 
@@ -64,7 +61,7 @@ int replace(std::istream& in, std::ostream& output = std::cout) {
             size_t number;
             in >> number;
             if (current == 'S') {
-                output << staticMarks[number];
+                
             } else if (current == 'D') {
                 output << dynamicMarks[count][number];
             } else return 1;
