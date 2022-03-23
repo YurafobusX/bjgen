@@ -1,4 +1,5 @@
 #include <cstddef>
+#include <ios>
 #include <iostream>
 #include <istream>
 #include <stdexcept>
@@ -53,17 +54,23 @@ int config(const std::map<std::string, std::string&>& map, const std::string& co
 
 //Принимает на вход строку и пишет её в выводной поток, заменяя все маркеры (\[[S,D]number\]) на их значение
 int replace(std::istream& in, std::ostream& output = std::cout) {
-    LOG("Начало " + std::to_string(count + 1) + "прохода\n")
+    LOG("Начало " + std::to_string(count + 1) + " прохода\n")
     std::string current;
     while(std::getline(in, current, '[')) {
+        if (in.eof())
+            continue;
         LOG("Найдена \"[\"...")
         std::getline(in, current, ']');
+        if (in.eof()) {
+            std::cerr << "\nНе найдена закрывающая \"]\" до конца файла\n";
+            return 1;
+        }
         LOG("Найдена \"]\"...")
         try {
             int number = std::stoi(current);
             LOG("Проверка на число \"" + current + "\"...")
             output << dynamicMarks[count][number];
-            LOG("Запись динамической марки" + dynamicMarks[count][number] + "\n")
+            LOG("Запись динамической марки \"" + dynamicMarks[count][number] + "\"\n")
         } catch (std::invalid_argument) {
             std::cerr << "[" << current << "]" << " не подходит под формат метки";
             return 1;
