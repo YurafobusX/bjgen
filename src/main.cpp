@@ -51,7 +51,6 @@ int config(const std::map<std::string, std::string&>& map, const std::string& co
     return 0;
 };
 
-
 //Принимает на вход строку и пишет её в выводной поток, заменяя все маркеры (\[[S,D]number\]) на их значение
 int replace(std::istream& in, std::ostream& output = std::cout) {
     LOG("Начало " + std::to_string(count + 1) + " прохода\n")
