@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.7)
 
-project(bjgen VERSION 0.0.2 LANGUAGES C CXX)
+project(bjgen VERSION 0.0.3 LANGUAGES C CXX)
 add_executable(bjgen)
 
 add_subdirectory(libs/OpenXLSX)

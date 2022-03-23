@@ -1,11 +1,13 @@
 #include <cstddef>
 #include <iostream>
+#include <istream>
 #include <string>
 #include <map>
 #include <utility>
 #include <sstream>
 #include <vector>
 #include <fstream>
+#include <map>
 #include "OpenXLSX.hpp"
 
 //Вектор, хранящий замену для всех статических маркеров
@@ -16,6 +18,23 @@ std::vector<std::vector<std::string>> dynamicMarks;
 
 //Индекс замены для динамических маркеров
 size_t count = 0;
+
+//Функция считывания данных из конфига
+int config(const std::map<std::string, std::string&>& map, const std::string& configPath) {
+    std::ifstream config(configPath, std::ios::in);
+    std::string key;
+    while (std::getline(config, key, '=')) {
+        if (key[0] == '#') {
+            std::getline(config, key);
+            continue;
+        }
+        //TODO Добавить обработку исключений
+        std::string& value = map.at(key);
+        std::getline(config, value);
+    }
+    return 0;
+};
+
 
 //Принимает на вход строку и пишет её в выводной поток, заменяя все маркеры (\[[S,D]number\]) на их значение
 int replace(std::istream& in, std::ostream& output = std::cout) {
@@ -44,18 +63,28 @@ int main(int argc, char* argv[]) {
     std::istream* input = &std::cin;
     std::ostream* output = &std::cout; 
 
-    std::ifstream finput("../resources/example.html", std::ios::in);
+    std::string inputPath, outputPath, docPath, isLogEnableStr;
+    std::map<std::string, std::string&> map = {
+        {"input", inputPath},
+        {"output", outputPath},
+        {"xlsxData", docPath},
+        {"log", isLogEnableStr}
+    };
+
+    config(map, "../resources/config.txt");
+
+    std::ifstream finput(inputPath, std::ios::in);
     if (!finput.good()) 
         return 1;
     input = &finput;
     *input >> std::noskipws;
 
-    std::ofstream foutput("../resources/result.html", std::ios::out);
+    std::ofstream foutput(outputPath, std::ios::out);
     if (!foutput.good()) 
         return 1;
     output = &foutput;
 
-    OpenXLSX::XLDocument doc("../resources/test.xlsx");
+    OpenXLSX::XLDocument doc(docPath);
     if (doc.name() == "")
         return 1;
     auto wk = doc.workbook().worksheet("1");

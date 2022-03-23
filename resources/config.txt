@@ -1,0 +1,4 @@
+input=../resources/example.html
+#log=true
+output=../resources/result.html
+xlsxData=../resources/test.xlsx
