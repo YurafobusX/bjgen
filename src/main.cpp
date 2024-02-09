@@ -10,9 +10,13 @@
 #include <vector>
 #include <fstream>
 #include <map>
+//#include <format> Терпим до 23 стандарта
+//#include <filesystem>
+//Надо протестировать насколько хорошо она с кириллицей работает
 #include "OpenXLSX.hpp"
 
-#define LOG(__str__) if (isLogEnable) {std::clog << __str__;}
+//Убрать, ужасно, сделать inline функцией
+#define LOG(__str__) if (isLogEnable) {std::wclog << __str__;}
 
 //Вектор, хранящий замену для всех динамических маркеров
 std::vector<std::vector<std::string>> dynamicMarks;
@@ -25,58 +29,60 @@ bool isLogEnable = true;
 
 //Функция считывания данных из конфига
 int config(const std::map<std::string, std::string&>& map, const std::string& configPath) {
-    LOG("Чтение конфигурационного файла\n")
+    LOG(L"Чтение конфигурационного файла\n")
     std::ifstream config(configPath, std::ios::in);
     if (!config.good()) {
-        std::cerr << "Не удалось открыть файл \"" << configPath << "\"\n"; 
+        std::wcerr << L"Не удалось открыть файл \"";
+        std::cerr << configPath << "\"\n"; 
         return 1;
     }
     std::string key;
     while (std::getline(config, key, '=')) {
         if (key[0] == '#') {
             std::getline(config, key);
-            LOG("Пропуск строки\n")
+            LOG(L"Пропуск строки\n")
             continue;
         }
         try {
             std::string& value = map.at(key);
             std::getline(config, value);
-            LOG("Запись \"" + value + "\" в \"" + key + "\"\n")
+            //LOG(L"Запись \"") LOG(std::to_wstring(value.begin(), value.end()))//  LOG(L"\" в \"")  LOG(std::to_wstring(key.begin(), key.end())) LOG(L"\"\n")
         } catch (std::out_of_range) {
-            std::cerr << "Введён неверный параметр конфигурации \"" << key << "\"\n";
+            std::wcerr << L"Введён неверный параметр конфигурации \"";
+            std::cerr << key << "\"\n";
             return 1; 
         };
     }
-    LOG("Конец чтения конфигурационного файла\n")
+    LOG(L"Конец чтения конфигурационного файла\n")
     return 0;
 };
 
 //Принимает на вход строку и пишет её в выводной поток, заменяя все маркеры (\[[S,D]number\]) на их значение
 int replace(std::istream& in, std::ostream& output = std::cout) {
-    LOG("Начало " + std::to_string(count + 1) + " прохода\n")
+    LOG(L"Начало ") LOG(std::to_wstring(count + 1)) LOG(L" прохода\n")
     std::string current;
     while(std::getline(in, current, '[')) {
         output << current;
         if (in.eof())
             continue;
-        LOG("Найдена \"[\"...")
+        LOG(L"Найдена \"[\"...")
         std::getline(in, current, ']');
         if (in.eof()) {
-            std::cerr << "\nНе найдена закрывающая \"]\" до конца файла\n";
+            std::wcerr << L"\nНе найдена закрывающая \"]\" до конца файла\n";
             return 1;
         }
-        LOG("Найдена \"]\"...")
+        LOG(L"Найдена \"]\"...")
         try {
             int number = std::stoi(current);
-            LOG("Проверка на число \"" + current + "\"...")
+            //LOG(L"Проверка на число \"" << current << L"\"...")
             output << dynamicMarks[count][number];
-            LOG("Запись динамической марки \"" + dynamicMarks[count][number] + "\"...\n")
+            //LOG(L"Запись динамической марки \"" << dynamicMarks[count][number] << L"\"...\n")
         } catch (std::invalid_argument) {
-            std::cerr << "[" << current << "]" << " не подходит под формат метки";
+            //std::wcerr << L"[" << current << L"]" << L" не подходит под формат метки";
             return 1;
         }
     };
-    LOG("Конец " + std::to_string(count + 1) + " прохода\n")
+    LOG(L"Конец ") LOG(std::to_wstring(count + 1))  LOG(L" прохода\n")
     //in.seekg(0);
     return 0;
 };
@@ -90,8 +96,8 @@ int main(int argc, char* argv[]) {
         {"log", isLogEnableStr},
         {"sheet", sheet}
     };
-    if (argc < 2) {
-        std::cout << "Введите название конфигурационного файла:\n";
+    if (argc < 2 ) {
+        std::wcout << L"Введите название конфигурационного файла:\n";
         std::cin >> configPath;
     } else {
         configPath = argv[1];
@@ -107,12 +113,12 @@ int main(int argc, char* argv[]) {
     if (inputPath.size() != 0) {
         finput.open(inputPath, std::ios::in);
         if (!finput.good()) {
-            std::cerr << "Не удалось открыть файл " << inputPath << '\n';
+            std::cerr << L"Не удалось открыть файл " << inputPath << '\n';
             return 1;
         }
         input = &finput;
-        LOG("Окрыт файл на ввод \"" + inputPath + "\"\n")
-    } else { std::cout << "Введите текст для обработки:\n";}
+        LOG(L"Окрыт файл на ввод \"") LOG(std::wstring(inputPath.begin(), inputPath.end())) LOG("\"\n")
+    } else { std::cout << L"Введите текст для обработки:\n";}
     *input >> std::noskipws;
 
     std::string file((std::istreambuf_iterator<char>(*input)), std::istreambuf_iterator<char>());
@@ -121,39 +127,39 @@ int main(int argc, char* argv[]) {
     if (outputPath != "") {
         foutput.open(outputPath, std::ios::out);
         if (!foutput.good()) {
-            std::cerr << "Не удалось открыть файл " << outputPath << '\n';
+            std::cerr << L"Не удалось открыть файл " << outputPath << '\n';
             return 1;
         }
         output = &foutput;
-        LOG("Окрыт файл на вывод \"" + outputPath + "\"\n")
-    } else {LOG("Вывод будет направлен в cout")}
+        LOG(L"Окрыт файл на вывод \"") LOG(std::wstring(outputPath.begin(), outputPath.end())) LOG("\"\n")
+    } else {LOG(L"Вывод будет направлен в cout")}
 
     OpenXLSX::XLDocument doc;
     try {
         doc.open(docPath);
     } catch (std::runtime_error) {
-        std::cerr << "Не удалось открыть файл " << docPath << '\n';
+        std::cerr << L"Не удалось открыть файл " << docPath << '\n';
         return 1;
     }
-    LOG("Данные будут браться из файла \"" + docPath + "\"\n") 
+    LOG(L"Данные будут браться из файла \"") LOG(std::wstring(docPath.begin(), docPath.end())) LOG("\"\n")
 
     OpenXLSX::XLWorksheet wk;
     try {
         wk = doc.workbook().worksheet(sheet);
     } catch (std::runtime_error) {
-        std::cerr << "В книге отсутсвует страница \"" << sheet << "\"\n";  
+        std::cerr << L"В книге отсутсвует страница \"" << sheet << "\"\n";  
         return 1;
     }
-    LOG("Открыта страница \"" + sheet + "\"\n")
+    LOG(L"Открыта страница \"") LOG(std::wstring(sheet.begin(), sheet.end())) LOG("\"\n")
 
     size_t latter = 0;
-    LOG("Чтение из xlsx документа...\n")
+    LOG(L"Чтение из xlsx документа...\n")
     while(wk.cell(latter + 1, 1).value().type() != OpenXLSX::XLValueType::Empty) {
         dynamicMarks.push_back(std::vector<std::string>());
         std::string current;
         int number = 1;
         while (wk.cell(latter + 1, number).value().type() != OpenXLSX::XLValueType::Empty) {
-            LOG("Считывание из ячейки \"" + std::to_string(latter + 1) + "," + std::to_string(number) + "\"\n")
+            LOG(L"Считывание из ячейки \"") LOG(std::to_wstring(latter + 1)) LOG(L",") LOG(std::to_wstring(number)) LOG("\"\n")
             std::string current = wk.cell(latter + 1, number).value().get<std::string>();
             dynamicMarks[latter].push_back(std::move(current));
             ++number;
@@ -161,7 +167,7 @@ int main(int argc, char* argv[]) {
         ++latter;
     }
     doc.close();
-    LOG("Чтение завершено\n")
+    LOG(L"Чтение завершено\n")
 
     for (count = 0; count < dynamicMarks.size(); ++count) {
         auto j = std::stringstream(file);
