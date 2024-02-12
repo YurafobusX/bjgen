@@ -82,6 +82,7 @@ int replace(std::istream& in, std::ostream& output = std::cout) {
 };
 
 int main(int argc, char* argv[]) {
+    std::locale::global(std::locale(""));
     std::string inputPath, outputPath, docPath, isLogEnableStr, configPath, sheet;
     std::map<std::string, std::string&> map = {
         {"input", inputPath},
